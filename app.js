@@ -8,7 +8,7 @@ const {createLogger, format, transports} = require('winston');
 const ejs = require('ejs');
 const express = require('express');
 const app = express();
-const https = require('https');
+const http = require('http');
 /* parsers */
 const cookieParser = require('cookie-parser');
 /* error handler */
@@ -92,15 +92,9 @@ app.post('/provider/v1.0/user/devices/query', r_user.query);
 app.post('/provider/v1.0/user/devices/action', r_user.action);
 app.post('/provider/v1.0/user/unlink', r_user.unlink);
 
-/* create https server */
-const privateKey = fs.readFileSync(config.https.privateKey, 'utf8');
-const certificate = fs.readFileSync(config.https.certificate, 'utf8');
-const credentials = {
-    key: privateKey,
-    cert: certificate,
-};
-const httpsServer = https.createServer(credentials, app);
-httpsServer.listen(config.https.port);
+/* create http server */
+const httpServer = http.createServer(app);
+httpServer.listen(config.http.port);
 
 /* cache devices from config to global */
 global.devices = [];
@@ -143,7 +137,7 @@ global.mqttClient = mqtt.connect(`mqtt://${config.mqtt.host}`, {
         let {skill_id, oauth_token, user_id} = el;
 
         return new Promise((resolve, reject) => {
-            let req = https.request({
+            let req = http.request({
                 hostname: 'dialogs.yandex.net',
                 port: 443,
                 path: `/api/v1/skills/${skill_id}/callback/state`,
